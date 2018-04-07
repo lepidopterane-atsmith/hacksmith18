@@ -9,10 +9,19 @@ import javax.swing.*;
 /**
  *  A class to implement a GUI that combines GUI interface and text-based input,
  * 	to display a graph of nodes (containing strings) and edges (containing weights/distances)
- *  @author  Ha Cao
+ *  @author  Ha Cao (modded for Array support by Sarah Abowitz)
  *  @version CSC 112, May 1st 2017
  */
 public class GraphGUI {
+	
+	boolean arrayMode = true;
+	
+	// I need a mock array if I'm gonna do this 
+	// {Alice, Bob, Carol, Dave, Elise, Fred, Grandpa, Ha, Innes, Jessica}
+	
+	private String addPointStr, rmvPointStr, addEdgeStr, rmvEdgeStr;
+	private String addPtInstr, rmvPtInstr, addEdgeInstr, rmvEdgeInstr;
+	
 	/** The graph to be displayed */
 	private static GraphCanvas canvas;
 
@@ -215,42 +224,56 @@ public class GraphGUI {
 		// Controls
 		panel2.setLayout(new GridLayout(5,2));
 
-		JButton addPointButton = new JButton("Add/Move Nodes");
+		if (arrayMode){
+			addPointStr = "Add Entry";
+			rmvPointStr = "Remove Entry";
+			addEdgeStr = "Access Entry"; // simulation will simulate getting that entry
+			rmvEdgeStr = "Search Array";
+		}else{
+			addPointStr = "Add/Move Nodes";
+			rmvPointStr = "Remove Nodes";
+			addEdgeStr = "Add Edges";
+			rmvEdgeStr = "Remove Edges";
+		}
+		
+		JButton addPointButton = new JButton(addPointStr);
 		panel2.add(addPointButton);
 		addPointButton.addActionListener(new AddNodeListener());
 
-		JButton rmvPointButton = new JButton("Remove Nodes");
+		JButton rmvPointButton = new JButton(rmvPointStr);
 		panel2.add(rmvPointButton);
 		rmvPointButton.addActionListener(new RmvNodeListener());
 
-		JButton addEdgeButton = new JButton("Add Edges");
+		JButton addEdgeButton = new JButton(addEdgeStr);
 		panel2.add(addEdgeButton);
 		addEdgeButton.addActionListener(new AddEdgeListener());
 
-		JButton rmvEdgeButton = new JButton("Remove Edges");
+		JButton rmvEdgeButton = new JButton(rmvEdgeStr);
 		panel2.add(rmvEdgeButton);
 		rmvEdgeButton.addActionListener(new RmvEdgeListener());	
 
-		JButton BFTButton = new JButton("Breadth-First Traversal");
-		panel2.add(BFTButton);
-		BFTButton.addActionListener(new BFTListener());	
-
-		JButton DFTButton = new JButton("Depth-First Traversal");
-		panel2.add(DFTButton);
-		DFTButton.addActionListener(new DFTListener());	
-
-		JButton shortestPathButton1 = new JButton("Shortest Path to All Nodes");
-		panel2.add(shortestPathButton1);
-		shortestPathButton1.addActionListener(new ShortestPath1Listener());	
-
-		JButton shortestPathButton2 = new JButton("Shortest Path to One Node");
-		panel2.add(shortestPathButton2);
-		shortestPathButton2.addActionListener(new ShortestPath2Listener());	
-
-		JButton outputButton = new JButton("Print a New Graph File");
-		panel2.add(outputButton);
-		outputButton.addActionListener(new OutputListener());	
-
+		if (!arrayMode){
+			JButton BFTButton = new JButton("Breadth-First Traversal");
+			panel2.add(BFTButton);
+			BFTButton.addActionListener(new BFTListener());	
+	
+			JButton DFTButton = new JButton("Depth-First Traversal");
+			panel2.add(DFTButton);
+			DFTButton.addActionListener(new DFTListener());	
+	
+			JButton shortestPathButton1 = new JButton("Shortest Path to All Nodes");
+			panel2.add(shortestPathButton1);
+			shortestPathButton1.addActionListener(new ShortestPath1Listener());	
+	
+			JButton shortestPathButton2 = new JButton("Shortest Path to One Node");
+			panel2.add(shortestPathButton2);
+			shortestPathButton2.addActionListener(new ShortestPath2Listener());	
+	
+			JButton outputButton = new JButton("Print a New Graph File");
+			panel2.add(outputButton);
+			outputButton.addActionListener(new OutputListener());	
+		}
+		
 		pane.add(panel2);	
 	}
 
@@ -303,7 +326,12 @@ public class GraphGUI {
 		/** Event handler for AddPoint button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.ADD_NODES;
-			instr.setText("Click to add new nodes or change their location.");
+			if (arrayMode){
+				addPtInstr = "Click an empty array slot to add an element.";
+			} else {
+				addPtInstr = "Click to add new nodes or change their location.";
+			}
+			instr.setText(addPtInstr);
 			defaultVar(canvas);
 		}
 	}
@@ -313,17 +341,27 @@ public class GraphGUI {
 		/** Event handler for RmvNode button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.RMV_NODES;
-			instr.setText("Click to remove existing nodes.");
+			if (arrayMode){
+				rmvPtInstr = "Click an array element to remove it.";
+			} else {
+				rmvPtInstr = "Click to remove existing nodes.";
+			}
+			instr.setText(rmvPtInstr);
 			defaultVar(canvas);
 		}
 	}
-
+	
 	/** Listener for AddEdge button */
 	private class AddEdgeListener implements ActionListener {
 		/** Event handler for AddEdge button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.ADD_EDGES;
-			instr.setText("Click head and tail respectively to add edge.");
+			if (arrayMode){
+				addEdgeInstr = "Click an array element to access it.";
+			} else {
+				addEdgeInstr = "Click head and tail respectively to add edge.";
+			}
+			instr.setText(addEdgeInstr);
 			defaultVar(canvas);
 		}
 	}
@@ -333,7 +371,12 @@ public class GraphGUI {
 		/** Event handler for RmvEdge button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.RMV_EDGES;
-			instr.setText("Click tail and head respectively to remove edge.");
+			if (arrayMode){
+				rmvEdgeInstr = "Click an array element to search for it.";
+			} else {
+				rmvEdgeInstr = "Click tail and head respectively to remove edge.";
+			}
+			instr.setText(rmvEdgeInstr);
 			defaultVar(canvas);
 		}
 	}
