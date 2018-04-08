@@ -1,11 +1,12 @@
 import java.util.*;
+import java.util.Timer;
 import java.awt.*;
 import javax.swing.*;  
 
 /**
  *  Implement a graphical canvas that displays a graph of nodes (represented by points) and edges (represented by lines)
  *
- *  @author  Ha Cao
+ *  @author  Ha Cao (modded by Sarah Abowitz)
  *  @version CSC 112, May 1st 2017
  */
 class GraphCanvas extends JComponent {	
@@ -18,6 +19,10 @@ class GraphCanvas extends JComponent {
 	protected LinkedList<Integer> ids;
 	/** The list of colors of all the nodes */
 	protected LinkedList<Color> colors;
+	private int mode = 1;
+	// Graph = 0, Array = 1, more coming ;)
+	private int[] arr = {211, 222, 233, 244, 255, 266, 277, 288, 299};
+	private ArrayList<String> annotations = new ArrayList<String>();
 
 	/** Constructor */
 	public GraphCanvas() {
@@ -82,6 +87,72 @@ class GraphCanvas extends JComponent {
     	colors.set(i, c);
     }
 
+    public void setArr(int[] array){
+    	for(int i=0; i<array.length; i++){
+    		arr[i] = array[i];
+    	}
+    }
+    
+    public int[] getArr(){
+    	return arr;
+    }
+    
+    public void setMode(int i){
+    	mode = i;
+    }
+    
+    public int getMode(){
+    	return mode;
+    }
+    
+    public void arrRemoval(int index){
+    	Timer timer = new Timer();
+    	int bound = arr.length;
+    	long delay = 1000;
+    	for (int j = 0; j < arr.length; j++){
+    		final int i = j;
+    		timer.schedule(new TimerTask(){
+    			@Override 
+    			public void run(){
+    				if (i >= index && i < arr.length-1){
+    	    			annotations.add("array["+i+"] = "+arr[i+1]);
+    	    		} else if (i < arr.length-1){
+    	    			annotations.add("Remains the same");
+    	    		} else {
+    	    			annotations.add("This slot does not exist in the new array");
+    	    		}
+    				GraphCanvas.this.repaint();
+    			}
+    			}, (2500*j));
+    		
+    	}
+    	
+    	timer.schedule(new TimerTask(){
+    		@Override
+    		public void run(){int[] temp = new int[bound-1];
+        	for(int i = 0; i < bound-1; i++){
+        		if (i>= index && i < bound-1){
+        			temp[i]=arr[i+1];
+        		} else {
+        			temp[i]=arr[i];
+        		}
+        	}
+        	
+        	arr = new int[bound-1];
+        	
+        	for(int i=0; i<arr.length; i++){
+        		arr[i] = temp[i];
+        	}
+        	
+        	annotations.clear();
+        	GraphCanvas.this.repaint();
+        	
+        	}}, 2500*bound);
+    	
+    	// for ()
+    	// redo the array, bye bye annotations, repaint
+    }
+    
 	/**
 	 *  Paint a red circle 20 pixels in diameter at each point to represent a node,
 	 *  a blue line to represent an edge, and a string label to represent the data of a node
@@ -89,20 +160,40 @@ class GraphCanvas extends JComponent {
 	 *  @param g The graphics object to draw with
 	 */
 	public void paintComponent(Graphics g) {
-		// Paint the nodes
-		for (int i=0; i<graph.nodes.size(); i++) {
-			g.setColor(colors.get(i));
-			g.fillOval((int) points.get(i).getX(), (int) points.get(i).getY(), 20, 20);	
-			// Paint the data of the nodes
-			g.setColor(Color.BLACK);
-			g.drawString(graph.getNode(i).getData(), (int) points.get(i).getX()+30, (int) points.get(i).getY()+30);
+		
+		if (mode == 0){
+			// Paint the nodes
+			for (int i=0; i<graph.nodes.size(); i++) {
+				g.setColor(colors.get(i));
+				g.fillOval((int) points.get(i).getX(), (int) points.get(i).getY(), 20, 20);	
+				// Paint the data of the nodes
+				g.setColor(Color.BLACK);
+				//g.drawString(graph.getNode(i).getData(), (int) points.get(i).getX()+30, (int) points.get(i).getY()+30);
+				
+				String tester = "X: "+points.get(i).getX()+" Y: "+points.get(i).getY();
+				g.drawString(tester, (int) points.get(i).getX()+30, (int) points.get(i).getY()+30);
+			}
+			
+			// Paint the edges
+			for (int i=0; i<graph.edges.size(); i++) {
+				g.setColor(Color.BLUE);
+				drawArrowLine(g, ((int) points.get(graph.getEdge(i).getHead().getIndex()).getX())+10, ((int) points.get(graph.getEdge(i).getHead().getIndex()).getY())+10, 
+						((int) points.get(graph.getEdge(i).getTail().getIndex()).getX())+10, ((int) points.get(graph.getEdge(i).getTail().getIndex()).getY())+10);
+			}
+		} else if(mode == 1){
+			for (int i=0; i < arr.length; i++){
+				g.setColor(Color.GREEN);
+				g.fillRect(22, 26+(60*i), 400, 50);
+				g.setColor(Color.BLACK);
+				g.drawString("array["+i+"] = "+arr[i], 30, 50+(60*i));
+				if (annotations.size()>i && annotations.size()>0){
+					g.drawString(annotations.get(i), 150, 50+(60*i));
+					
+				}
+			}
+			
+			
 		}
 		
-		// Paint the edges
-		for (int i=0; i<graph.edges.size(); i++) {
-			g.setColor(Color.BLUE);
-			drawArrowLine(g, ((int) points.get(graph.getEdge(i).getHead().getIndex()).getX())+10, ((int) points.get(graph.getEdge(i).getHead().getIndex()).getY())+10, 
-					((int) points.get(graph.getEdge(i).getTail().getIndex()).getX())+10, ((int) points.get(graph.getEdge(i).getTail().getIndex()).getY())+10);
-		}
 	}
 } // end of GraphCanvas

@@ -17,7 +17,7 @@ public class GraphGUI {
 	boolean arrayMode = true;
 	
 	// I need a mock array if I'm gonna do this 
-	// {Alice, Bob, Carol, Dave, Elise, Fred, Grandpa, Ha, Innes, Jessica}
+	// {200,211,222,233,244,255,266,277,288,299}
 	
 	private String addPointStr, rmvPointStr, addEdgeStr, rmvEdgeStr;
 	private String addPtInstr, rmvPtInstr, addEdgeInstr, rmvEdgeInstr;
@@ -316,6 +316,23 @@ public class GraphGUI {
 		return point;		
 	}
 
+	public boolean zoneClicked(int x1, int x2, int y1, int y2, Point pt){
+		int xPrime = (int) pt.getX();
+		int yPrime = (int) pt.getY();
+		boolean horiz = false, vert = false;
+		if (x1 < xPrime && x2 > xPrime){
+			horiz = true;
+		    //	System.out.println(horiz);
+		}
+		if (y1 < yPrime && y2 > yPrime){
+			vert = true;
+		}
+		if (horiz && vert){
+			return true;
+		}
+		return false;
+	}
+	
 	/** Constants for recording the input mode */
 	enum InputMode {
 		ADD_NODES, RMV_NODES, ADD_EDGES, RMV_EDGES, BFT, DFT, SHORTEST_PATH_TO_ALL, SHORTEST_PATH_TO_ONE, OUT_PUT
@@ -327,7 +344,7 @@ public class GraphGUI {
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.ADD_NODES;
 			if (arrayMode){
-				addPtInstr = "Click an empty array slot to add an element.";
+				addPtInstr = "Click above, between, or below slots to add an element.";
 			} else {
 				addPtInstr = "Click to add new nodes or change their location.";
 			}
@@ -336,7 +353,7 @@ public class GraphGUI {
 		}
 	}
 
-	/** Listener for RmvNode button */
+	/** Listener for RmvNode button */ 
 	private class RmvNodeListener implements ActionListener {
 		/** Event handler for RmvNode button */
 		public void actionPerformed(ActionEvent e) {
@@ -489,23 +506,40 @@ public class GraphGUI {
 				// If the click is on top of an existing node, remove it from the canvas's graph.
 				// Otherwise, emit a beep.
 				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
-				if (pointUnderMouse!=null) {
-					for (int i=0; i<canvas.points.size(); i++) {
-						if (canvas.points.get(i).equals(pointUnderMouse)) {
-							canvas.graph.removeNode(canvas.graph.getNode(i));
-							canvas.points.remove(canvas.points.get(i));
-							canvas.ids.remove(canvas.ids.get(i));
-							canvas.colors.remove(canvas.colors.get(i));
-						}
-					}					
-				} else {
-					Toolkit.getDefaultToolkit().beep();		
-					JFrame frame = new JFrame("");
-					// Warning
-					JOptionPane.showMessageDialog(frame,
-							"Failed click on nodes. Start removing nodes again.",
-							"Click Warning",
-							JOptionPane.WARNING_MESSAGE);
+				Point rmvClick = new Point((int) e.getX(), (int) e.getY());
+				if(!arrayMode){
+					if (pointUnderMouse!=null) {
+						for (int i=0; i<canvas.points.size(); i++) {
+							if (canvas.points.get(i).equals(pointUnderMouse)) {
+								canvas.graph.removeNode(canvas.graph.getNode(i));
+								canvas.points.remove(canvas.points.get(i));
+								canvas.ids.remove(canvas.ids.get(i));
+								canvas.colors.remove(canvas.colors.get(i));
+							}
+						}					
+					} else {
+						Toolkit.getDefaultToolkit().beep();		
+						JFrame frame = new JFrame("");
+						// Warning
+						JOptionPane.showMessageDialog(frame,
+								"Failed click on nodes. Start removing nodes again.",
+								"Click Warning",
+								JOptionPane.WARNING_MESSAGE);
+					}
+				} else if (arrayMode && canvas.getArr().length > 0){
+					int arrLen = canvas.getArr().length;
+					int itemClicked = 10; // if itemClicked stays at 10, no hitbox clicked
+					for (int i = 0; i < arrLen; i++){
+						int y1 = 26+(60*i);
+						int y2 = 76+(60*i);
+						if (zoneClicked(22,422,y1,y2,rmvClick)) {itemClicked = i;}
+					}
+					
+					if (itemClicked < 10){
+						instr.setText("Copying array into new array without item.");
+						canvas.arrRemoval(itemClicked);
+					}
+					
 				}
 				canvas.repaint();
 				break;		
