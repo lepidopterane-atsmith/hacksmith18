@@ -180,6 +180,12 @@ public class Graph<V,E>{
 		}		
 	}
 
+	/** A method to reset the graph to an empty graph */
+	public void removeAll() {
+		edges = new LinkedList<Edge>();
+		nodes = new LinkedList<Node>();
+	}
+	
 	/** A method to obtain the nodes that are end-points to a given list of edges */
 	public LinkedList<Node> endpoints(LinkedList<Edge> givenEdges) {
 		LinkedList<Node> endpoints = new LinkedList<Node>();

@@ -21,46 +21,6 @@ public class ArrayCanvas extends JComponent{
 		setMinimumSize(new Dimension(500,700));
 		setPreferredSize(new Dimension(500,700));
 	}
-	
-	/**
-     * Draw an arrow line between two points 
-     * 
-     * @param g The graphic component
-     * @param x1 x-coordinate of start point
-     * @param y1 y-coordinate of start point
-     * @param x2 x-coordinate of end point
-     * @param y2 y-coordinate of end point
-     */
-    public static void drawArrowLine(Graphics g, int x1, int y1, int x2, int y2){
-       int dx = x2 - x1, dy = y2 - y1;
-       double D = Math.sqrt(dx*dx + dy*dy);
-       double xm = D - 5, xn = xm, ym = 5, yn = -5, x;
-       double sin = dy/D, cos = dx/D;
-
-       x = xm*cos - ym*sin + x1;
-       ym = xm*sin + ym*cos + y1;
-       xm = x;
-
-       x = xn*cos - yn*sin + x1;
-       yn = xn*sin + yn*cos + y1;
-       xn = x;
-       
-       // Create x-points and y-points arrays for the Polygon
-       int[] xpoints = {x2, (int) xm, (int) xn};
-       int[] ypoints = {y2, (int) ym, (int) yn};
-
-       // Draw the line
-       g.drawLine(x1, y1, x2, y2);
-       // Draw the arrow part
-       g.fillPolygon(xpoints, ypoints, 3);
-    }
-    
-    /**
-     * A method to get the color of a particular node given its index
-     * 
-     * @param i The index of the node
-     * @return The color of the node
-     */
     
     public void setArr(int[] array){
     	for(int i=0; i<array.length; i++){

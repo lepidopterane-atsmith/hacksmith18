@@ -1,27 +1,17 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
+import java.io.PrintStream;
 import java.util.*;
 import java.util.Queue;
-import java.io.*;
 import javax.swing.*;        
 
 /**
- *  A class to implement a GUI that combines GUI interface and text-based input,
- * 	to display a graph of nodes (containing strings) and edges (containing weights/distances)
- *  @author  Ha Cao (modded for Array support by Sarah Abowitz)
- *  @version CSC 112, May 1st 2017
+ * A panel to display graph
+ * @author Ha Cao and Sarah Abowitz
+ * @version Apr 7th, 2018
  */
-public class GraphGUI {
-	
-	boolean arrayMode = true;
-	
-	// I need a mock array if I'm gonna do this 
-	// {200,211,222,233,244,255,266,277,288,299}
-	
-	private String addPointStr, rmvPointStr, addEdgeStr, rmvEdgeStr;
-	private String addPtInstr, rmvPtInstr, addEdgeInstr, rmvEdgeInstr;
-	
+public class GraphPanel {
 	/** The graph to be displayed */
 	private static GraphCanvas canvas;
 
@@ -40,27 +30,37 @@ public class GraphGUI {
 	/** The number of nodes that have been clicked */
 	private int twoNodeClick = 0;
 
-	/** The graph frame */
-	private JFrame graphFrame;
-
 	/** Graph display fields */
-	private Container pane;
 	private JPanel panel1;
 	private GraphMouseListener gml;
 
 	/** Control field */
 	private JPanel panel2;
+	
+	/** Create an instance of javax.swing.JTextArea control */
+	JTextArea txtConsole;
 
 	/** Constructor */
-	public GraphGUI() {
+	public GraphPanel(JComponent panel) {
 		// Initialize the graph display and control fields
-		graphFrame = new JFrame("Graph GUI");
-		pane = graphFrame.getContentPane();
 		canvas = new GraphCanvas();
 		panel1 = new JPanel();
 		gml = new GraphMouseListener();
 		instr = new JLabel("Click to add new nodes; drag to move.");
 		panel2 = new JPanel();
+		txtConsole = new JTextArea();
+
+		// Now create a new TextAreaOutputStream to write to our JTextArea control and wrap a
+		// PrintStream around it to support the println/printf methods.
+		PrintStream out = new PrintStream(new TextAreaOutputStream(txtConsole));
+
+		// redirect standard output stream to the TextAreaOutputStream
+		System.setOut(out);
+
+		// redirect standard error stream to the TextAreaOutputStream
+		System.setErr(out);		
+
+		createComponents(panel);
 	}
 
 	/** 
@@ -70,7 +70,7 @@ public class GraphGUI {
 	 */
 	public static int getIndex(Point pointUnderMouse) {
 		int index = -1;
-		for (int i=0; i<canvas.points.size(); i++) {
+		for (int i = 0; i < canvas.points.size(); i++) {
 			if (canvas.points.get(i).equals(pointUnderMouse)) {
 				index = i;
 			}
@@ -85,7 +85,7 @@ public class GraphGUI {
 	 */
 	public static int getIndex(Integer id) {
 		int index = -1;
-		for (int i=0; i<canvas.ids.size(); i++) {
+		for (int i = 0; i < canvas.ids.size(); i++) {
 			if (canvas.ids.get(i).equals(id)) {
 				index = i;
 			}
@@ -100,7 +100,7 @@ public class GraphGUI {
 	 */
 	public static int getIndex(Graph<String,Integer>.Node node) {
 		int index = -1;
-		for (int i=0; i<canvas.graph.nodes.size(); i++) {
+		for (int i = 0; i < canvas.graph.nodes.size(); i++) {
 			if (canvas.graph.getNode(i).equals(node)) {
 				index = i;
 			}
@@ -115,7 +115,7 @@ public class GraphGUI {
 	public void defaultVar(GraphCanvas canvas) {
 		// Paint the nodes as red again just in case the user changes modes while a node is waiting (in yellow).
 		// in order to avoid leaving the node still yellow when moving to a new mode
-		for (int i=0; i<canvas.colors.size(); i++) {
+		for (int i = 0; i < canvas.colors.size(); i++) {
 			canvas.setNodeColor(i, Color.RED);
 		}
 		// Default these values to so that new modes can begin from scratch
@@ -125,156 +125,61 @@ public class GraphGUI {
 		canvas.repaint();
 	}
 
-	/**
-	 *  Schedule a job for the event-dispatching thread,
-	 *  creating and showing this application's GUI
-	 */
-	public static void main(String[] args) {
-		final GraphGUI GUI = new GraphGUI();
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				GUI.createAndShowGUI();
-			}
-		});
-
-		// If the user input a file 
-		if (args.length != 0) {
-			// Read the input problem file
-			BufferedReader file = null;		
-			try {
-				file = new BufferedReader(new FileReader(args[0]));
-				String thisLine;
-				while ((thisLine = file.readLine()) != null) {
-					// Real index in the lists of nodes/edges
-					// If this line is about a node
-					if (thisLine.charAt(0) == 'n') {
-						// First white space
-						int w1 = thisLine.indexOf(" ");
-						// Second white space
-						int w2 = thisLine.indexOf(" ", w1+1);
-						// Third white space
-						int w3 = thisLine.indexOf(" ", w2+1);
-						// Fourth white space
-						int w4 = thisLine.indexOf(" ", w3+1);
-						// ID of the node
-						canvas.ids.add(Integer.valueOf(thisLine.substring(w1+1, w2).replaceAll(" ", "")));
-						// x-coordinate of the point representing this node
-						int x = Integer.valueOf(thisLine.substring(w2+1, w3).replaceAll(" ", ""));
-						// y-coordinate of the point representing this node
-						int y = Integer.valueOf(thisLine.substring(w3+1, w4).replaceAll(" ", ""));
-						// Add the point of this node
-						canvas.points.add(new Point(x, y));
-						// Add this node to the graph
-						canvas.graph.addNode(thisLine.substring(w4+1, thisLine.length()));
-						// Add the color of this node
-						canvas.colors.add(Color.RED);
-						canvas.repaint();
-					} else if (thisLine.charAt(0) == 'e') { // If this line is about an edge
-						// First white space
-						int w1 = thisLine.indexOf(" ");
-						// Second white space
-						int w2 = thisLine.indexOf(" ", w1+1);
-						// Third white space
-						int w3 = thisLine.indexOf(" ", w2+1);
-						// ID of head of this edge
-						int headID = Integer.valueOf(thisLine.substring(w1+1, w2).replaceAll(" ", ""));
-						// ID of tail of this edge
-						int tailID = Integer.valueOf(thisLine.substring(w2+1, w3).replaceAll(" ", ""));
-						// Add this edge to the graph
-						canvas.graph.addEdge((int) Point2D.distance(canvas.points.get(getIndex(headID)).getX(), canvas.points.get(getIndex(headID)).getY(), 
-								canvas.points.get(getIndex(tailID)).getX(), canvas.points.get(getIndex(tailID)).getY()),
-								canvas.graph.getNode(getIndex(headID)), canvas.graph.getNode(getIndex(tailID)));
-						canvas.repaint();
-					}					
-				}
-			} catch (IOException e) {
-				System.err.println("Problem reading file "+file);
-				System.exit(-1);
-			}
-		}
-	}
-
-	/** Set up the GUI window */
-	public void createAndShowGUI() {
-		// Make sure we have nice window decorations
-		JFrame.setDefaultLookAndFeelDecorated(true);
-
-		// Create and set up the window
-		graphFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		// Add components
-		createComponents(graphFrame);
-
-		// Display the window.
-		graphFrame.pack();
-		graphFrame.setVisible(true);
-	}
-
 	/** Puts content in the GUI window */
-	public void createComponents(JFrame frame) {
+	public void createComponents(JComponent panel) {
 		// Graph display
-		pane.setLayout(new FlowLayout());
+		panel.setLayout(new FlowLayout());
 		panel1.setLayout(new BorderLayout());
 		canvas.addMouseListener(gml);
 		canvas.addMouseMotionListener(gml);
 		panel1.add(canvas);
-		panel1.add(instr,BorderLayout.NORTH);
-		pane.add(panel1);
+		panel1.add(instr, BorderLayout.NORTH);		
 
-		// Controls
-		panel2.setLayout(new GridLayout(5,2));
-
-		if (arrayMode){
-			addPointStr = "Add Entry";
-			rmvPointStr = "Remove Entry";
-			addEdgeStr = "Access Entry"; // simulation will simulate getting that entry
-			rmvEdgeStr = "Search Array";
-		}else{
-			addPointStr = "Add/Move Nodes";
-			rmvPointStr = "Remove Nodes";
-			addEdgeStr = "Add Edges";
-			rmvEdgeStr = "Remove Edges";
-		}
+		panel.add(panel1);
 		
-		JButton addPointButton = new JButton(addPointStr);
+		// Controls
+		panel2.setLayout(new GridLayout(10, 1));
+
+		JButton addPointButton = new JButton("Add/Move Nodes");
 		panel2.add(addPointButton);
 		addPointButton.addActionListener(new AddNodeListener());
 
-		JButton rmvPointButton = new JButton(rmvPointStr);
+		JButton rmvPointButton = new JButton("Remove Nodes");
 		panel2.add(rmvPointButton);
 		rmvPointButton.addActionListener(new RmvNodeListener());
 
-		JButton addEdgeButton = new JButton(addEdgeStr);
+		JButton addEdgeButton = new JButton("Add Edges");
 		panel2.add(addEdgeButton);
 		addEdgeButton.addActionListener(new AddEdgeListener());
 
-		JButton rmvEdgeButton = new JButton(rmvEdgeStr);
+		JButton rmvEdgeButton = new JButton("Remove Edges");
 		panel2.add(rmvEdgeButton);
 		rmvEdgeButton.addActionListener(new RmvEdgeListener());	
 
-		if (!arrayMode){
-			JButton BFTButton = new JButton("Breadth-First Traversal");
-			panel2.add(BFTButton);
-			BFTButton.addActionListener(new BFTListener());	
-	
-			JButton DFTButton = new JButton("Depth-First Traversal");
-			panel2.add(DFTButton);
-			DFTButton.addActionListener(new DFTListener());	
-	
-			JButton shortestPathButton1 = new JButton("Shortest Path to All Nodes");
-			panel2.add(shortestPathButton1);
-			shortestPathButton1.addActionListener(new ShortestPath1Listener());	
-	
-			JButton shortestPathButton2 = new JButton("Shortest Path to One Node");
-			panel2.add(shortestPathButton2);
-			shortestPathButton2.addActionListener(new ShortestPath2Listener());	
-	
-			JButton outputButton = new JButton("Print a New Graph File");
-			panel2.add(outputButton);
-			outputButton.addActionListener(new OutputListener());	
-		}
+		JButton BFTButton = new JButton("Breadth-First Traversal");
+		panel2.add(BFTButton);
+		BFTButton.addActionListener(new BFTListener());	
+
+		JButton DFTButton = new JButton("Depth-First Traversal");
+		panel2.add(DFTButton);
+		DFTButton.addActionListener(new DFTListener());	
+
+		JButton shortestPathButton1 = new JButton("Shortest Path to All Nodes");
+		panel2.add(shortestPathButton1);
+		shortestPathButton1.addActionListener(new ShortestPath1Listener());	
+
+		JButton shortestPathButton2 = new JButton("Shortest Path to One Node");
+		panel2.add(shortestPathButton2);
+		shortestPathButton2.addActionListener(new ShortestPath2Listener());	
+
+		JButton clearButton = new JButton("Clear Previous Content");
+		panel2.add(clearButton);
+		clearButton.addActionListener(new ClearListener());	
 		
-		pane.add(panel2);	
+		panel2.add(txtConsole);
+		panel2.add(new JScrollPane(txtConsole));
+		
+		panel.add(panel2);	
 	}
 
 	/** 
@@ -316,26 +221,9 @@ public class GraphGUI {
 		return point;		
 	}
 
-	public boolean zoneClicked(int x1, int x2, int y1, int y2, Point pt){
-		int xPrime = (int) pt.getX();
-		int yPrime = (int) pt.getY();
-		boolean horiz = false, vert = false;
-		if (x1 < xPrime && x2 > xPrime){
-			horiz = true;
-		    //	System.out.println(horiz);
-		}
-		if (y1 < yPrime && y2 > yPrime){
-			vert = true;
-		}
-		if (horiz && vert){
-			return true;
-		}
-		return false;
-	}
-	
 	/** Constants for recording the input mode */
 	enum InputMode {
-		ADD_NODES, RMV_NODES, ADD_EDGES, RMV_EDGES, BFT, DFT, SHORTEST_PATH_TO_ALL, SHORTEST_PATH_TO_ONE, OUT_PUT
+		ADD_NODES, RMV_NODES, ADD_EDGES, RMV_EDGES, BFT, DFT, SHORTEST_PATH_TO_ALL, SHORTEST_PATH_TO_ONE, CLEAR_CONTENT
 	}
 
 	/** Listener for AddNode button */
@@ -343,42 +231,27 @@ public class GraphGUI {
 		/** Event handler for AddPoint button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.ADD_NODES;
-			if (arrayMode){
-				addPtInstr = "Click above, between, or below slots to add an element.";
-			} else {
-				addPtInstr = "Click to add new nodes or change their location.";
-			}
-			instr.setText(addPtInstr);
+			instr.setText("Click to add new nodes or change their location.");
 			defaultVar(canvas);
 		}
 	}
 
-	/** Listener for RmvNode button */ 
+	/** Listener for RmvNode button */
 	private class RmvNodeListener implements ActionListener {
 		/** Event handler for RmvNode button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.RMV_NODES;
-			if (arrayMode){
-				rmvPtInstr = "Click an array element to remove it.";
-			} else {
-				rmvPtInstr = "Click to remove existing nodes.";
-			}
-			instr.setText(rmvPtInstr);
+			instr.setText("Click to remove existing nodes.");
 			defaultVar(canvas);
 		}
 	}
-	
+
 	/** Listener for AddEdge button */
 	private class AddEdgeListener implements ActionListener {
 		/** Event handler for AddEdge button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.ADD_EDGES;
-			if (arrayMode){
-				addEdgeInstr = "Click an array element to access it.";
-			} else {
-				addEdgeInstr = "Click head and tail respectively to add edge.";
-			}
-			instr.setText(addEdgeInstr);
+			instr.setText("Click head and tail respectively to add edge.");
 			defaultVar(canvas);
 		}
 	}
@@ -388,12 +261,7 @@ public class GraphGUI {
 		/** Event handler for RmvEdge button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.RMV_EDGES;
-			if (arrayMode){
-				rmvEdgeInstr = "Click an array element to search for it.";
-			} else {
-				rmvEdgeInstr = "Click tail and head respectively to remove edge.";
-			}
-			instr.setText(rmvEdgeInstr);
+			instr.setText("Click tail and head respectively to remove edge.");
 			defaultVar(canvas);
 		}
 	}
@@ -438,35 +306,16 @@ public class GraphGUI {
 		}
 	}
 
-	/** Listener for Output button */
-	private class OutputListener implements ActionListener {
-		/** Event handler for Output button */
+	/** Listener for Clear button */
+	private class ClearListener implements ActionListener {
+		/** Event handler for Clear button */
 		public void actionPerformed(ActionEvent e) {
-			mode = InputMode.OUT_PUT;
-			instr.setText("New graph file is printed.");
-			defaultVar(canvas);
-
-			// Print the output in the file
-			PrintWriter out = null;
-			try {
-				out = new PrintWriter(new FileWriter("graph_output.txt"));
-			} catch (IOException ex) {
-				System.err.println("Error with output file.");
-			}
-			// Print the problem statement line
-			out.println("p "+canvas.graph.numNodes()+" "+canvas.graph.numEdges());
-			// Print the nodes
-			for (int i=0; i<canvas.graph.nodes.size(); i++) {
-				out.println("n "+canvas.ids.get(i)+" "+ (int) canvas.points.get(i).getX()+" "+
-						(int) canvas.points.get(i).getY()+" "+ canvas.graph.nodes.get(i).getData());
-			}
-			// Print the edges
-			for (int i=0; i<canvas.graph.edges.size(); i++) {
-				out.println("e "+ canvas.ids.get(getIndex(canvas.graph.edges.get(i).getHead()))+" "+
-						canvas.ids.get(getIndex(canvas.graph.edges.get(i).getTail())) +" "+
-						canvas.graph.getEdge(i).getData());
-			}
-			out.close();
+			mode = InputMode.CLEAR_CONTENT;
+			instr.setText("Previous content is removed");
+			// Remove all nodes and edges in canvas and repaint it
+			canvas.graph.removeAll();
+			canvas.repaint();
+			txtConsole.setText(null);
 		}
 	}
 
@@ -480,40 +329,25 @@ public class GraphGUI {
 			case ADD_NODES:
 				// If the click is not on top of an existing node, create a new node and add it to the canvas.
 				// Otherwise, emit a beep, as shown below:
-			if(arrayMode && canvas.getArr().length < 10){
-				JFrame addQuery = new JFrame("Add an entry");
-				String insertPlace = JOptionPane.showInputDialog(addQuery, "Type the index of where you want to add your element.");
-				int index = Integer.valueOf(insertPlace);
-				String number = JOptionPane.showInputDialog(addQuery, "Type the integer value of your element.");
-				int num = Integer.valueOf(number);
-				instr.setText("Copying array into new array with new item.");
-				if(index < canvas.getArr().length+1){
-					canvas.arrAddition(index, num);
+				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
+				Point pointToCreate = new Point((int) e.getX(), (int) e.getY());
+				if (pointUnderMouse == null) {
+					JFrame frame = new JFrame("User's input data of the nodes");
+					// Prompt the user to enter the input data and IDs of the nodes 
+					String dataNode = JOptionPane.showInputDialog(frame, "What's the data of this node?");
+					String idNode = JOptionPane.showInputDialog(frame, "What's the ID of this node?");
+					canvas.graph.addNode(dataNode);
+					canvas.ids.add(Integer.valueOf(idNode));
+					canvas.points.add(pointToCreate);
+					canvas.colors.add(Color.RED);
 				} else {
-					instr.setText("Addition out of bounds.");
-				}
-			}
-			else{
-					pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
-					Point pointToCreate = new Point((int) e.getX(), (int) e.getY());
-					if (pointUnderMouse==null) {
-						JFrame frame = new JFrame("User's input data of the nodes");
-						// Prompt the user to enter the input data and IDs of the nodes 
-						String dataNode = JOptionPane.showInputDialog(frame, "What's the data of this node?");
-						String idNode = JOptionPane.showInputDialog(frame, "What's the ID of this node?");
-						canvas.graph.addNode(dataNode);
-						canvas.ids.add(Integer.valueOf(idNode));
-						canvas.points.add(pointToCreate);
-						canvas.colors.add(Color.RED);
-					} else {
-						Toolkit.getDefaultToolkit().beep();
-						JFrame frame = new JFrame("");
-						// Warning
-						JOptionPane.showMessageDialog(frame,
-								"Failed click on empty space. Start adding nodes again.",
-								"Click Warning",
-								JOptionPane.WARNING_MESSAGE);
-					}
+					Toolkit.getDefaultToolkit().beep();
+					JFrame frame = new JFrame("");
+					// Warning
+					JOptionPane.showMessageDialog(frame,
+							"Failed click on empty space. Start adding nodes again.",
+							"Click Warning",
+							JOptionPane.WARNING_MESSAGE);
 				}
 				canvas.repaint();
 				break;
@@ -521,40 +355,23 @@ public class GraphGUI {
 				// If the click is on top of an existing node, remove it from the canvas's graph.
 				// Otherwise, emit a beep.
 				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
-				Point rmvClick = new Point((int) e.getX(), (int) e.getY());
-				if(!arrayMode){
-					if (pointUnderMouse!=null) {
-						for (int i=0; i<canvas.points.size(); i++) {
-							if (canvas.points.get(i).equals(pointUnderMouse)) {
-								canvas.graph.removeNode(canvas.graph.getNode(i));
-								canvas.points.remove(canvas.points.get(i));
-								canvas.ids.remove(canvas.ids.get(i));
-								canvas.colors.remove(canvas.colors.get(i));
-							}
-						}					
-					} else {
-						Toolkit.getDefaultToolkit().beep();		
-						JFrame frame = new JFrame("");
-						// Warning
-						JOptionPane.showMessageDialog(frame,
-								"Failed click on nodes. Start removing nodes again.",
-								"Click Warning",
-								JOptionPane.WARNING_MESSAGE);
-					}
-				} else if (arrayMode && canvas.getArr().length > 0){
-					int arrLen = canvas.getArr().length;
-					int itemClicked = 10; // if itemClicked stays at 10, no hitbox clicked
-					for (int i = 0; i < arrLen; i++){
-						int y1 = 26+(60*i);
-						int y2 = 76+(60*i);
-						if (zoneClicked(22,422,y1,y2,rmvClick)) {itemClicked = i;}
-					}
-					
-					if (itemClicked < 10){
-						instr.setText("Copying array into new array without item.");
-						canvas.arrRemoval(itemClicked);
-					}
-					
+				if (pointUnderMouse != null) {
+					for (int i=0; i<canvas.points.size(); i++) {
+						if (canvas.points.get(i).equals(pointUnderMouse)) {
+							canvas.graph.removeNode(canvas.graph.getNode(i));
+							canvas.points.remove(canvas.points.get(i));
+							canvas.ids.remove(canvas.ids.get(i));
+							canvas.colors.remove(canvas.colors.get(i));
+						}
+					}					
+				} else {
+					Toolkit.getDefaultToolkit().beep();		
+					JFrame frame = new JFrame("");
+					// Warning
+					JOptionPane.showMessageDialog(frame,
+							"Failed click on nodes. Start removing nodes again.",
+							"Click Warning",
+							JOptionPane.WARNING_MESSAGE);
 				}
 				canvas.repaint();
 				break;		
@@ -563,27 +380,11 @@ public class GraphGUI {
 				// Otherwise, check how many nodes have been clicked;
 				// If only 1, save the node (which is supposed to be the head).
 				// If already 2, create an edge between the two nodes. 
-				Point accClick = new Point((int) e.getX(), (int) e.getY());
-				if(arrayMode){
-					int arrLen = canvas.getArr().length;
-					int itemClicked = 10; // if itemClicked stays at 10, no hitbox clicked
-					for (int i = 0; i < arrLen; i++){
-						int y1 = 26+(60*i);
-						int y2 = 76+(60*i);
-						if (zoneClicked(22,422,y1,y2,accClick)) {itemClicked = i;}
-					}
-					instr.setText("The item, if accessed, is in cyan.");
-					if(itemClicked < canvas.getArr().length){
-						canvas.arrAccess(itemClicked);
-					} else {
-						instr.setText("Called element out of bounds.");
-					}
-				} else{
-				
+
 				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
-				if (pointUnderMouse!=null) {	
+				if (pointUnderMouse != null) {	
 					twoNodeClick++;
-					if (twoNodeClick==2) {
+					if (twoNodeClick == 2) {
 						canvas.graph.addEdge((int) Point2D.distance(previousPoint.getX(), previousPoint.getY(), pointUnderMouse.getX(), pointUnderMouse.getY()),
 								canvas.graph.getNode(getIndex(previousPoint)), canvas.graph.getNode(getIndex(pointUnderMouse)));
 						twoNodeClick = 0;
@@ -596,7 +397,7 @@ public class GraphGUI {
 				} else {
 					Toolkit.getDefaultToolkit().beep();		
 					twoNodeClick = 0;
-					for (int i=0; i<canvas.colors.size(); i++) {
+					for (int i = 0; i<canvas.colors.size(); i++) {
 						canvas.setNodeColor(i, Color.RED);
 					}					
 					JFrame frame = new JFrame("");
@@ -607,7 +408,6 @@ public class GraphGUI {
 							JOptionPane.WARNING_MESSAGE);
 				}
 				canvas.repaint();
-				}
 				break ;		
 			case RMV_EDGES:
 				// If the click is not on top of an existing node, emit a beep, as shown below.
@@ -615,13 +415,13 @@ public class GraphGUI {
 				// If only 1, save the node (which is supposed to be the head).
 				// If already 2, remove the edge between the two nodes. 
 				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
-				if (pointUnderMouse!=null) {
+				if (pointUnderMouse != null) {
 					twoNodeClick++;
-					if (twoNodeClick==2) {
+					if (twoNodeClick == 2) {
 						Graph<String,Integer>.Edge edge = canvas.graph.getEdgeRef(canvas.graph.getNode(getIndex(previousPoint)), 
 								canvas.graph.getNode(getIndex(pointUnderMouse)));
-						if (edge!=null) {
-							for (int i=0; i<canvas.graph.edges.size(); i++) {
+						if (edge != null) {
+							for (int i = 0; i < canvas.graph.edges.size(); i++) {
 								if (canvas.graph.getEdge(i).equals(edge)) {
 									canvas.graph.removeEdge(canvas.graph.getEdge(i));
 								}
@@ -647,7 +447,7 @@ public class GraphGUI {
 				} else {
 					Toolkit.getDefaultToolkit().beep();		
 					twoNodeClick = 0;
-					for (int i=0; i<canvas.colors.size(); i++) {
+					for (int i = 0; i < canvas.colors.size(); i++) {
 						canvas.setNodeColor(i, Color.RED);
 					}	
 					JFrame frame = new JFrame("");
@@ -781,7 +581,7 @@ public class GraphGUI {
 				}
 				canvas.repaint();
 				break;	
-			case OUT_PUT:
+			case CLEAR_CONTENT:
 				break;
 			}
 		}
@@ -802,10 +602,10 @@ public class GraphGUI {
 		public void mouseDragged(MouseEvent e) {
 			// If mode allows node motion, and there is a point under the mouse, 
 			// then change its coordinates to the current mouse coordinates & update display
-			if ((mode == InputMode.ADD_NODES) && (pointUnderMouse!=null)) {
+			if ((mode == InputMode.ADD_NODES) && (pointUnderMouse != null)) {
 				pointUnderMouse.setLocation((int) e.getX(), (int) e.getY());
 				// Loop through the edge list of this particular node to update the distances
-				for (int i=0; i<canvas.graph.getNode(getIndex(pointUnderMouse)).getMyEdges().size(); i++) {
+				for (int i = 0; i < canvas.graph.getNode(getIndex(pointUnderMouse)).getMyEdges().size(); i++) {
 					Graph<String,Integer>.Edge edge = canvas.graph.getNode(getIndex(pointUnderMouse)).getMyEdges().get(i);
 					Point headPoint = canvas.points.get(getIndex(edge.getHead()));
 					Point tailPoint = canvas.points.get(getIndex(edge.getTail()));
