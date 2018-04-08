@@ -146,12 +146,12 @@ boolean arrayMode = true;
 		panel2.add(rmvEdgeButton);
 		rmvEdgeButton.addActionListener(new RmvEdgeListener());	
 
-		if (!arrayMode){
-			JButton BFTButton = new JButton("Breadth-First Traversal");
-			panel2.add(BFTButton);
-			BFTButton.addActionListener(new BFTListener());	
+
+		JButton BFTButton = new JButton("Edit Entries");
+		panel2.add(BFTButton);
+		BFTButton.addActionListener(new BFTListener());	
 	
-		}
+	
 		
 		pane.add(panel2);	
 	}
@@ -237,11 +237,10 @@ boolean arrayMode = true;
 		/** Event handler for BFT button */
 		public void actionPerformed(ActionEvent e) {
 			mode = InputMode.BFT;
-			instr.setText("Click a node to broad-traverse the graph.");
+			instr.setText("Click an element to change its value.");
 			//defaultVar(canvas);
 		}
 	}
-
 
 	/** Mouse listener for ArrayCanvas element */
 	private class GraphMouseListener extends MouseAdapter
@@ -265,8 +264,7 @@ boolean arrayMode = true;
 				} else {
 					instr.setText("Addition out of bounds.");
 				}
-			}
-			else{
+			}else{
 						Toolkit.getDefaultToolkit().beep();
 						JFrame frame = new JFrame("");
 						// Warning
@@ -327,7 +325,11 @@ boolean arrayMode = true;
 				break ;		
 			case RMV_EDGES:
 				// TODO Traversal Coming Soon!!!!!!
-				canvas.repaint();
+				JFrame addQuery = new JFrame("Add an entry");
+				String insertPlace = JOptionPane.showInputDialog(addQuery, "What integer are you looking for?");
+				int index = Integer.valueOf(insertPlace);
+				canvas.arrSearch(index);
+	
 				break;	
 			case BFT:
 				// TODO Editing Coming Soon!!!!!

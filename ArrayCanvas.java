@@ -72,6 +72,31 @@ public class ArrayCanvas extends JComponent{
     	return arr;
     }
     
+    public void arrSearch(int match){
+    	// while this thing isn't found or we still have array in front of  us
+    	int j = 0;
+    	Timer timer = new Timer();
+    	long delay = 2500;
+    	boolean found = false;
+    	while (!found && j <= arr.length){
+    		final int i = j;
+    		timer.schedule(new TimerTask(){
+    			@Override
+    			public void run(){
+    				if (i > arr.length){
+    					
+    				} else if (arr[i] == match){
+    					annotations.add("Query found!");
+    					// DO SOMETHING
+    				} else {
+    					annotations.add("Still searching...");
+    				}
+    				ArrayCanvas.this.repaint();
+    			}
+    		}, delay*j);  
+    		
+    	}
+    }
     
     public void arrAccess(int index){
     	access = index;
@@ -195,7 +220,7 @@ public class ArrayCanvas extends JComponent{
 				} else {
 					c = Color.GREEN;
 				}
-				System.out.println("i: "+i+" access: "+access);
+				// System.out.println("i: "+i+" access: "+access);
 				g.setColor(c);
 				g.fillRect(22, 26+(60*i), 400, 50);
 				g.setColor(Color.BLACK);
