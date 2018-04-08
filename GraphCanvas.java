@@ -24,6 +24,7 @@ class GraphCanvas extends JComponent {
 	private int[] arr = {211, 222, 233, 244, 255, 266, 277, 288, 299};
 	private ArrayList<String> annotations = new ArrayList<String>();
 	boolean addingToArr = false;
+	private int access = 10;
 
 	/** Constructor */
 	public GraphCanvas() {
@@ -104,6 +105,11 @@ class GraphCanvas extends JComponent {
     
     public int getMode(){
     	return mode;
+    }
+    
+    public void arrAccess(int index){
+    	access = index;
+    	GraphCanvas.this.repaint();
     }
     
     public void arrAddition(int index,int num){
@@ -237,8 +243,15 @@ class GraphCanvas extends JComponent {
 						((int) points.get(graph.getEdge(i).getTail().getIndex()).getX())+10, ((int) points.get(graph.getEdge(i).getTail().getIndex()).getY())+10);
 			}
 		} else if(mode == 1){
+			Color c = Color.GREEN;
 			for (int i=0; i < arr.length; i++){
-				g.setColor(Color.GREEN);
+				if (i == access){
+					c = Color.CYAN;
+				} else {
+					c = Color.GREEN;
+				}
+				System.out.println("i: "+i+" access: "+access);
+				g.setColor(c);
 				g.fillRect(22, 26+(60*i), 400, 50);
 				g.setColor(Color.BLACK);
 				g.drawString("array["+i+"] = "+arr[i], 30, 50+(60*i));
@@ -251,8 +264,7 @@ class GraphCanvas extends JComponent {
 				}
 			}
 			
-			
-			
+			access = 10;
 		}
 		
 	}

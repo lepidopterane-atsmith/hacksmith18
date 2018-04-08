@@ -563,7 +563,23 @@ public class GraphGUI {
 				// Otherwise, check how many nodes have been clicked;
 				// If only 1, save the node (which is supposed to be the head).
 				// If already 2, create an edge between the two nodes. 
-
+				Point accClick = new Point((int) e.getX(), (int) e.getY());
+				if(arrayMode){
+					int arrLen = canvas.getArr().length;
+					int itemClicked = 10; // if itemClicked stays at 10, no hitbox clicked
+					for (int i = 0; i < arrLen; i++){
+						int y1 = 26+(60*i);
+						int y2 = 76+(60*i);
+						if (zoneClicked(22,422,y1,y2,accClick)) {itemClicked = i;}
+					}
+					instr.setText("The item, if accessed, is in cyan.");
+					if(itemClicked < canvas.getArr().length){
+						canvas.arrAccess(itemClicked);
+					} else {
+						instr.setText("Called element out of bounds.");
+					}
+				} else{
+				
 				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
 				if (pointUnderMouse!=null) {	
 					twoNodeClick++;
@@ -591,6 +607,7 @@ public class GraphGUI {
 							JOptionPane.WARNING_MESSAGE);
 				}
 				canvas.repaint();
+				}
 				break ;		
 			case RMV_EDGES:
 				// If the click is not on top of an existing node, emit a beep, as shown below.
