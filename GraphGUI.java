@@ -480,25 +480,40 @@ public class GraphGUI {
 			case ADD_NODES:
 				// If the click is not on top of an existing node, create a new node and add it to the canvas.
 				// Otherwise, emit a beep, as shown below:
-				pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
-				Point pointToCreate = new Point((int) e.getX(), (int) e.getY());
-				if (pointUnderMouse==null) {
-					JFrame frame = new JFrame("User's input data of the nodes");
-					// Prompt the user to enter the input data and IDs of the nodes 
-					String dataNode = JOptionPane.showInputDialog(frame, "What's the data of this node?");
-					String idNode = JOptionPane.showInputDialog(frame, "What's the ID of this node?");
-					canvas.graph.addNode(dataNode);
-					canvas.ids.add(Integer.valueOf(idNode));
-					canvas.points.add(pointToCreate);
-					canvas.colors.add(Color.RED);
+			if(arrayMode && canvas.getArr().length < 10){
+				JFrame addQuery = new JFrame("Add an entry");
+				String insertPlace = JOptionPane.showInputDialog(addQuery, "Type the index of where you want to add your element.");
+				int index = Integer.valueOf(insertPlace);
+				String number = JOptionPane.showInputDialog(addQuery, "Type the integer value of your element.");
+				int num = Integer.valueOf(number);
+				instr.setText("Copying array into new array with new item.");
+				if(index < canvas.getArr().length+1){
+					canvas.arrAddition(index, num);
 				} else {
-					Toolkit.getDefaultToolkit().beep();
-					JFrame frame = new JFrame("");
-					// Warning
-					JOptionPane.showMessageDialog(frame,
-							"Failed click on empty space. Start adding nodes again.",
-							"Click Warning",
-							JOptionPane.WARNING_MESSAGE);
+					instr.setText("Addition out of bounds.");
+				}
+			}
+			else{
+					pointUnderMouse = findNearbyPoint((int) e.getX(), (int) e.getY());
+					Point pointToCreate = new Point((int) e.getX(), (int) e.getY());
+					if (pointUnderMouse==null) {
+						JFrame frame = new JFrame("User's input data of the nodes");
+						// Prompt the user to enter the input data and IDs of the nodes 
+						String dataNode = JOptionPane.showInputDialog(frame, "What's the data of this node?");
+						String idNode = JOptionPane.showInputDialog(frame, "What's the ID of this node?");
+						canvas.graph.addNode(dataNode);
+						canvas.ids.add(Integer.valueOf(idNode));
+						canvas.points.add(pointToCreate);
+						canvas.colors.add(Color.RED);
+					} else {
+						Toolkit.getDefaultToolkit().beep();
+						JFrame frame = new JFrame("");
+						// Warning
+						JOptionPane.showMessageDialog(frame,
+								"Failed click on empty space. Start adding nodes again.",
+								"Click Warning",
+								JOptionPane.WARNING_MESSAGE);
+					}
 				}
 				canvas.repaint();
 				break;

@@ -23,6 +23,7 @@ class GraphCanvas extends JComponent {
 	// Graph = 0, Array = 1, more coming ;)
 	private int[] arr = {211, 222, 233, 244, 255, 266, 277, 288, 299};
 	private ArrayList<String> annotations = new ArrayList<String>();
+	boolean addingToArr = false;
 
 	/** Constructor */
 	public GraphCanvas() {
@@ -105,7 +106,65 @@ class GraphCanvas extends JComponent {
     	return mode;
     }
     
+    public void arrAddition(int index,int num){
+    	addingToArr = true;
+    	Timer timer = new Timer();
+    	int bound = arr.length;
+    	long delay = 1000;
+    	int j;
+    	for (j = 0; j <= arr.length; j++){
+    		final int i = j;
+    		timer.schedule(new TimerTask(){
+    			@Override 
+    			public void run(){
+    				if (i > index){
+    	    			annotations.add("array["+i+"] = "+arr[i-1]);
+    	    		} else if (i < index){
+    	    			annotations.add("Remains the same");
+    	    		} else {
+    	    			annotations.add("array["+i+"] = "+num);
+    	    		}
+    				GraphCanvas.this.repaint();
+    			}
+    			}, (2500*j));
+    		
+    	}
+    	final int k = j+1;
+    	timer.schedule(new TimerTask(){
+    		@Override
+    		public void run(){
+    		try{
+    				annotations.add("array["+k+"] = "+arr[-1]);
+    		} catch (ArrayIndexOutOfBoundsException a){
+    			a.printStackTrace();
+    		}
+    		GraphCanvas.this.repaint();
+    		
+    		int[] temp = new int[bound+1];
+        	for(int i = 0; i < bound+1; i++){
+        		if (i> index){
+        			temp[i]=arr[i-1];
+        		} else if (i == index){
+        			temp[i]=num; 
+        		} else {
+        			temp[i]=arr[i];
+        		}
+        	}
+        	
+        	arr = new int[bound+1];
+        	
+        	for(int i=0; i<arr.length; i++){
+        		arr[i] = temp[i];
+        	}
+        	
+        	annotations.clear();
+        	GraphCanvas.this.repaint();
+        	
+        	}}, 2500*bound);
+    }
+    
     public void arrRemoval(int index){
+    	addingToArr=false;
     	Timer timer = new Timer();
     	int bound = arr.length;
     	long delay = 1000;
@@ -148,9 +207,6 @@ class GraphCanvas extends JComponent {
         	GraphCanvas.this.repaint();
         	
         	}}, 2500*bound);
-    	
-    	// for ()
-    	// redo the array, bye bye annotations, repaint
     }
     
 	/**
@@ -190,7 +246,11 @@ class GraphCanvas extends JComponent {
 					g.drawString(annotations.get(i), 150, 50+(60*i));
 					
 				}
+				if (addingToArr && arr.length < annotations.size()){
+					g.drawString(annotations.get(annotations.size()-1), 150, 50+(60*arr.length));
+				}
 			}
+			
 			
 			
 		}
